@@ -21,12 +21,12 @@ O sistema cobrirá as seguintes atividades essenciais da clínica:
 
 Projeto desenvolvido em grupo:
 
-* Pedro Blamires - [Perfil]([link](https://github.com/ArrozbR))
-* Jefferson Felex - [Perfil]([link](https://github.com/jeffersonfelex))
-* Gabriel Rodrigues - [Perfil]([link](https://github.com/Rodrigzx))
-* Adriano Faleiro Gregorio - [Perfil]([link](https://github.com/AdrianoFaleiroGregorio))
-* Gabriel Borges - [Perfil]([link](https://github.com/gabriellbh862))
-* Heitor Felipe Trindade - [Perfil]([link](https://github.com/HfelpsO))
-* Vinicius Rodrigues - [Perfil]([link](https://github.com/viniciusdevr))
+* Pedro Blamires - [Perfil](https://github.com/ArrozbR)
+* Jefferson Felex - [Perfil](https://github.com/jeffersonfelex)
+* Gabriel Rodrigues - [Perfil](https://github.com/Rodrigzx)
+* Adriano Faleiro Gregorio - [Perfil](https://github.com/AdrianoFaleiroGregorio)
+* Gabriel Borges - [Perfil](https://github.com/gabriellbh862)
+* Heitor Felipe Trindade - [Perfil](https://github.com/HfelpsO)
+* Vinicius Rodrigues - [Perfil](https://github.com/viniciusdevr)
 
 ---
