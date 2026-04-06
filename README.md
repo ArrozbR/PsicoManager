@@ -4,6 +4,8 @@ Bem-vindo ao repositório do **PsicoManager**, um sistema de gestão voltado par
 
 O objetivo principal deste projeto é desenvolver uma plataforma Web que otimize a rotina administrativa e clínica, garantindo a segurança das informações dos pacientes em total conformidade com a **Lei Geral de Proteção de Dados** (LGPD).
 
+**Link do Drive:** [Clique Aqui](https://drive.google.com/drive/folders/1j6rBFBWW8qcbF5BU6HAJt7rIDnYt5lyo?usp=sharing)
+
 ---
 
 ## 🎯 Escopo do Sistema
