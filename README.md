@@ -8,18 +8,6 @@ O objetivo principal deste projeto é desenvolver uma plataforma Web que otimize
 
 ---
 
-## 🗂️ Estrutura do Repositório
-
-| Pasta | Conteúdo |
-|-------|----------|
-| [`prototipos/`](prototipos/) | PDFs e PNGs das telas (protótipos estáticos) |
-| [`plugin-figma/`](plugin-figma/) | Plugin gerador de telas no Figma — [ver documentação](plugin-figma/README.md) |
-| [`levantamento/`](levantamento/) | BPMN, entrevistas, questionário, formulário de usuários, sistema análogo e documentação legal |
-| [`documentos/`](documentos/) | Documentos de análise (Visão, IEEE 830, etc.) |
-| [`diagramas/`](diagramas/) | Casos de uso, MER, matriz de rastreabilidade |
-
----
-
 ## 🎯 Escopo do Sistema
 
 O sistema cobrirá as seguintes atividades essenciais da clínica:
