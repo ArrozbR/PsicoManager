@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PsicoManager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a401519ccb483a882fbde00a0358469a64a660b8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54a9de423202643aa0c000a3419fe19775cb8e2a")]
 [assembly: System.Reflection.AssemblyProductAttribute("PsicoManager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PsicoManager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

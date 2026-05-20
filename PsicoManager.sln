@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsicoManager", "PsicoManager.csproj", "{5207ECF4-01F0-B3EB-6689-49ED17EDCA0B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5207ECF4-01F0-B3EB-6689-49ED17EDCA0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5207ECF4-01F0-B3EB-6689-49ED17EDCA0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5207ECF4-01F0-B3EB-6689-49ED17EDCA0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5207ECF4-01F0-B3EB-6689-49ED17EDCA0B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {261218AD-AADF-4E1E-A8D8-3673EDEFDFC2}
+	EndGlobalSection
+EndGlobal
