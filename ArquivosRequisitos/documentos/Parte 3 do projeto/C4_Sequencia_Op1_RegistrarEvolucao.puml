@@ -1,0 +1,84 @@
+@startuml C4_Sequencia_Op1_RegistrarEvolucao
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Sequência (C4) — Exemplo 1
+' Operação: ProntuarioService.registrarEvolucao()
+' Foco: mensagens entre classes do próprio componente
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam SequenceArrowColor #1F4E79
+skinparam ParticipantBackgroundColor #FEF9E7
+skinparam ParticipantBorderColor #C0392B
+skinparam ActorBackgroundColor #F5EEF8
+skinparam ActorBorderColor #7D3C98
+skinparam SequenceGroupBackgroundColor #FFFDE7
+skinparam SequenceGroupBorderColor #E8A020
+skinparam NoteBackgroundColor #E9F7EF
+
+actor "Psicólogo" as PSI
+
+participant "ProntuarioController\n[Web]" as CTRL
+participant "ProntuarioService\n[Aplicação]" as SVC
+participant "AcessoSigiloService\n[Domínio]" as SIGILO
+participant "ProntuarioClinico\n[Entidade]" as PRON
+participant "EvolutionClinica\n[Entidade]" as EVOL
+participant "TravaEdicaoService\n[Domínio]" as TRAVA
+participant "CriptografiaService\n[Infra]" as CRIPT
+participant "ProntuarioRepository\n[Infra]" as REPO
+participant "AuditLogger\n[Infra]" as AUDIT
+participant "StorageService\n[Infra]" as STORE
+database "BD Clínico" as DB
+database "Storage\n(S3/Blob)" as S3
+
+PSI -> CTRL : POST /prontuarios/{pacienteId}/evolucoes\n{texto, arquivos[]}\n[JWT — psicologoId]
+
+CTRL -> SVC : registrarEvolucao(\n  psicologoId, pacienteId, texto, arquivos)
+
+SVC -> SIGILO : validarAcesso(\n  psicologoId, pacienteId)
+SIGILO -> REPO : buscarVinculoTerapeutico(\n  psicologoId, pacienteId)
+REPO -> DB : SELECT FROM vinculos\nWHERE psicologo_id=? AND paciente_id=?
+DB --> REPO : vinculo encontrado
+REPO --> SIGILO : Vinculo (ativo)
+SIGILO --> SVC : acesso autorizado
+
+SVC -> REPO : buscarProntuario(pacienteId)
+REPO -> DB : SELECT FROM prontuarios\nWHERE paciente_id=?
+DB --> REPO : ProntuarioData
+REPO --> SVC : ProntuarioClinico
+
+SVC -> PRON : verificarStatus()
+PRON --> SVC : status=ATIVO
+
+SVC -> EVOL : criar(\n  texto, psicologoId, sessaoId,\n  dataHora=NOW())
+EVOL --> SVC : EvolutionClinica (status=EDITAVEL)
+
+alt Há arquivos para anexar
+  loop para cada arquivo
+    SVC -> CRIPT : criptografarArquivo(bytes, AES256)
+    CRIPT --> SVC : bytesCriptografados
+    SVC -> STORE : upload(\n  bytesCriptografados,\n  path="prontuarios/{id}/")
+    STORE -> S3 : PUT object\n[AES-256 SSE]
+    S3 --> STORE : urlStorage
+    STORE --> SVC : urlStorage
+    SVC -> EVOL : adicionarAnexo(\n  nome, tipo, urlStorage, tamanho)
+  end
+end
+
+SVC -> TRAVA : agendarTrava(\n  evolucaoId,\n  prazoHoras=24)
+TRAVA -> DB : INSERT INTO agendamento_trava\n(evolucao_id, executar_em=NOW()+24h)
+DB --> TRAVA : ok
+
+SVC -> REPO : salvar(evolucao)
+REPO -> DB : INSERT INTO evolucoes\n(id, prontuario_id, texto_criptografado,\ndataHora, status, psicologo_id)
+DB --> REPO : evolucaoId
+
+SVC -> AUDIT : registrar(\n  usuarioId=psicologoId,\n  acao=CRIACAO,\n  entidade=EVOLUCAO,\n  entidadeId=evolucaoId,\n  ip=requestIp)
+AUDIT -> DB : INSERT INTO log_auditoria\n(imutável — sem UPDATE/DELETE)
+DB --> AUDIT : ok
+
+SVC --> CTRL : EvolucaoResponseDto\n{evolucaoId, dataHora, status=EDITAVEL}
+CTRL --> PSI : HTTP 201 Created\n{evolucaoId, mensagem: "Evolução salva"}
+
+@enduml

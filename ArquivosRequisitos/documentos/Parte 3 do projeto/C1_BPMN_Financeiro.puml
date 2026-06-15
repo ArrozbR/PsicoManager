@@ -1,0 +1,71 @@
+@startuml C1_BPMN_Financeiro
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Atividades (notação BPMN)
+' Processo de Negócio 2: Gestão de Cobrança e Pagamento
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ActivityBackgroundColor #E9F7EF
+skinparam ActivityBorderColor #27AE60
+skinparam ActivityDiamondBackgroundColor #FEF9E7
+skinparam ActivityDiamondBorderColor #E8A020
+skinparam ArrowColor #1F4E79
+skinparam PartitionBackgroundColor #F8F9FA
+skinparam PartitionBorderColor #AAAAAA
+
+|Psicólogo|
+start
+:Acessa módulo\nFinanceiro;
+:Visualiza sessões\nrealizadas sem cobrança\nlançada;
+:Seleciona sessão\ne informa valor\ndo honorário;
+
+|Sistema|
+:Registra cobrança\ncom status "pendente";
+:Solicita Pix copia-e-cola\nao Gateway de Pagamento;
+
+|Gateway de Pagamento|
+if (Gateway disponível?) then (sim)
+  :Gera código Pix\nEMV (BACEN);
+
+  |Sistema|
+  :Disponibiliza Pix\nno Painel do Paciente (UC08);
+
+  |Paciente|
+  :Acessa Painel\ne copia o Pix;
+  :Realiza pagamento\nvia banco;
+
+  |Sistema|
+  if (Confirmação automática\ndisponível?) then (sim)
+    :Recebe webhook\ndo gateway;
+    :Atualiza status\npara "pago";
+  else (não — baixa manual)
+    |Psicólogo|
+    :Verifica recebimento\ne acessa lista de pendentes;
+    :Clica em\n"Confirmar Recebimento";
+
+    |Sistema|
+    :Solicita confirmação\nexplícita;
+
+    |Psicólogo|
+    :Confirma a baixa;
+
+    |Sistema|
+    :Atualiza status\npara "pago";
+  endif
+
+  |Sistema|
+  :Registra operação\nno Log de Auditoria (RNF04);
+  :Atualiza fluxo de caixa;
+  stop
+
+else (indisponível)
+  |Sistema|
+  :Registra lançamento\nlocalmente;
+  :Exibe aviso de\nindisponibilidade\ndo gateway;
+  :Permite baixa\nmanual posterior;
+  stop
+endif
+
+@enduml

@@ -1,0 +1,136 @@
+@startuml C2_Pacotes
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Pacotes (C2)
+' Arquitetura em camadas + módulos de domínio
+' Padrão: Clean Architecture / Onion Architecture
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam PackageBackgroundColor #EBF5FB
+skinparam PackageBorderColor #2E75B6
+skinparam PackageFontStyle bold
+skinparam ArrowColor #1F4E79
+skinparam ArrowFontSize 10
+
+' ── Camada de Apresentação ───────────────────────────────
+package "<<Apresentação>>\nPsicoManager.Web" as WEB #D5E8F0 {
+  package "Controllers" as CTRL {
+    [AgendaController]
+    [ProntuarioController]
+    [FinanceiroController]
+    [TeleconsultaController]
+    [PacienteController]
+    [DocumentoController]
+    [NotificacaoController]
+  }
+  package "Views / Razor Pages" as VIEWS {
+    [PainelPsicologo]
+    [PainelPaciente]
+    [AgendaView]
+    [ProntuarioView]
+    [FinanceiroView]
+  }
+}
+
+' ── Camada de Aplicação ──────────────────────────────────
+package "<<Aplicação>>\nPsicoManager.Application" as APP #EBF5FB {
+  package "Agenda" as APP_AG {
+    [AgendarSessaoUseCase]
+    [EditarSessaoUseCase]
+    [CancelarSessaoUseCase]
+    [BloquearHorarioUseCase]
+  }
+  package "Prontuário" as APP_PR {
+    [RegistrarEvolucaoUseCase]
+    [EmitirDocumentoUseCase]
+  }
+  package "Financeiro" as APP_FI {
+    [LancarCobracaUseCase]
+    [RegistrarPagamentoUseCase]
+    [RelatorioFinanceiroUseCase]
+  }
+  package "Teleconsulta" as APP_TC {
+    [IniciarSalaUseCase]
+    [AcessarSalaUseCase]
+  }
+  package "Notificações" as APP_NT {
+    [EnviarLembreteUseCase]
+    [AgendarNotificacaoUseCase]
+  }
+  package "Paciente" as APP_PAC {
+    [AgendarSessaoPacienteUseCase]
+    [DiarioEmocoesUseCase]
+    [AcessarDocumentosUseCase]
+  }
+}
+
+' ── Camada de Domínio ────────────────────────────────────
+package "<<Domínio>>\nPsicoManager.Domain" as DOM #E9F7EF {
+  package "Entidades" as ENT {
+    [Sessao]
+    [HorarioAgenda]
+    [ProntuarioClinico]
+    [EvolutionClinica]
+    [Cobranca]
+    [Teleconsulta]
+    [Notificacao]
+    [DiarioEmocoes]
+    [Documento]
+  }
+  package "Regras de Negócio" as RN {
+    [ConflictoHorarioService]
+    [TravaEdicaoService]
+    [RetencaoDadosService]
+    [AcessoSigiloService]
+  }
+  package "Interfaces de Repositório" as REPO_IF {
+    [ISessaoRepository]
+    [IProntuarioRepository]
+    [ICobrancaRepository]
+    [INotificacaoRepository]
+  }
+}
+
+' ── Camada de Infraestrutura ─────────────────────────────
+package "<<Infraestrutura>>\nPsicoManager.Infrastructure" as INFRA #FDEDEC {
+  package "Persistência" as PERS {
+    [SessaoRepository]
+    [ProntuarioRepository]
+    [CobrancaRepository]
+    [LogAuditoriaRepository]
+  }
+  package "Integrações Externas" as EXT {
+    [WhatsAppService]
+    [EmailSmtpService]
+    [GatewayPagamentoService]
+    [StorageService]
+  }
+  package "Segurança" as SEC {
+    [JwtAuthService]
+    [CriptografiaService]
+    [AuditLogService]
+  }
+}
+
+' ── Dependências entre camadas (seta = depende de) ───────
+WEB    ..> APP   : usa
+APP    ..> DOM   : usa
+INFRA  ..|> DOM  : implementa\ninterfaces
+WEB    ..> INFRA : injeta via DI
+
+note bottom of DOM
+  Camada de domínio não depende
+  de nenhuma outra camada.
+  Inversão de dependência (DIP).
+end note
+
+note right of INFRA
+  Cada repositório implementa
+  a interface correspondente
+  definida no Domínio.
+  Banco clínico ≠ banco de auth.
+end note
+
+@enduml

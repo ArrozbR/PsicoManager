@@ -1,0 +1,86 @@
+@startuml C3_Sequencia_Componentes
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Sequência entre Componentes (C3)
+' Cenário: UC01a — Agendar Sessão (Psicólogo)
+' Foco: mensagens entre componentes (não entre classes)
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam SequenceArrowColor #1F4E79
+skinparam SequenceArrowFontSize 10
+skinparam ParticipantBackgroundColor #EBF5FB
+skinparam ParticipantBorderColor #2E75B6
+skinparam ActorBackgroundColor #F5EEF8
+skinparam ActorBorderColor #7D3C98
+skinparam SequenceGroupBackgroundColor #FFFDE7
+skinparam SequenceGroupBorderColor #E8A020
+skinparam NoteBackgroundColor #FEF9E7
+skinparam NoteBorderColor #E8A020
+
+actor "Psicólogo" as PSI
+participant "Painel\nPsicólogo\n[UI]" as UI
+participant "API REST\n[AgendaController]" as API
+participant "AgendaService\n[Aplicação]" as AG_SVC
+participant "ConflictoHorario\nValidator\n[Domínio]" as VAL
+participant "AgendaRepository\n[Infra]" as AG_REPO
+participant "NotificacaoService\n[Aplicação]" as NT_SVC
+participant "WhatsApp\nAdapter\n[Infra]" as WA
+database "BD Clínico\n[PostgreSQL]" as DB
+participant "WhatsApp\nBusiness API\n[Externo]" as EXT_WA
+
+== Fluxo Principal: Agendar Sessão ==
+
+PSI -> UI : Seleciona horário\ne preenche formulário
+UI -> API : POST /agenda/sessoes\n{pacienteId, dataHora, tipo, duracao}\n[JWT Bearer Token]
+
+API -> API : Valida JWT\ne perfil RBAC\n(Psicólogo)
+
+API -> AG_SVC : agendarSessao(dto)
+
+AG_SVC -> VAL : validarConflito(\n  psicologoId, dataHora, duracao)
+
+VAL -> AG_REPO : buscarSessoesNoHorario(\n  psicologoId, dataHora, duracao)
+AG_REPO -> DB : SELECT sessoes\nWHERE psicologo_id = ?\nAND status != 'cancelada'\nAND overlap(dataHora, duracao)
+DB --> AG_REPO : [ ] (sem conflito)
+AG_REPO --> VAL : listaSessoes vazia
+
+VAL --> AG_SVC : OK — sem conflito
+
+AG_SVC -> AG_REPO : salvarSessao(sessao)
+AG_REPO -> DB : INSERT INTO sessoes\n(id, paciente_id, psicologo_id,\ndataHora, tipo, duracao, status='agendada')
+DB --> AG_REPO : sessaoId
+AG_REPO --> AG_SVC : Sessao salva
+
+AG_SVC -> NT_SVC : agendarNotificacao(\n  sessaoId, pacienteId,\n  tipo=CONFIRMACAO_AGENDAMENTO,\n  canal=WHATSAPP)
+
+NT_SVC -> WA : enviarMensagem(\n  destinatario, templateId, params)
+WA -> EXT_WA : POST /messages\n{to, type, template}\n[OAuth 2.0]
+
+alt Envio bem-sucedido
+  EXT_WA --> WA : HTTP 200 — messageId
+  WA --> NT_SVC : status=ENVIADO
+  NT_SVC -> DB : UPDATE notificacoes\nSET status='enviado'
+else Falha no envio
+  EXT_WA --> WA : HTTP 5xx / timeout
+  WA --> NT_SVC : status=FALHA
+  NT_SVC -> DB : UPDATE notificacoes\nSET status='falha', tentativas+=1
+  note right of NT_SVC : RetryScheduler agenda\nnova tentativa em 15 min\n(máx. 3 tentativas)
+end
+
+AG_SVC --> API : SessaoResponseDto\n{sessaoId, status, dataHora}
+API --> UI : HTTP 201 Created\n{sessaoId, confirmacao}
+UI --> PSI : Grade atualizada —\nhora destacada em azul
+
+== Extensão 4a: Conflito de horário ==
+
+note over VAL, DB
+  Se validarConflito retorna lista não vazia:
+  AG_SVC lança ConflictoHorarioException
+  API retorna HTTP 409 Conflict
+  {"erro": "Horário já ocupado — escolha outro horário"}
+  UI exibe alerta e mantém o formulário aberto
+end note
+
+@enduml

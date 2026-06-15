@@ -1,0 +1,59 @@
+@startuml C1_BPMN_Prontuario
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Atividades (notação BPMN)
+' Processo de Negócio 3: Registro de Prontuário Clínico
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ActivityBackgroundColor #FDEDEC
+skinparam ActivityBorderColor #C0392B
+skinparam ActivityDiamondBackgroundColor #FEF9E7
+skinparam ActivityDiamondBorderColor #E8A020
+skinparam ArrowColor #1F4E79
+
+|Psicólogo|
+start
+:Encerra atendimento\n(presencial ou teleconsulta);
+:Acessa prontuário\ndo paciente via agenda;
+
+|Sistema|
+:Verifica perfil\ne vínculo terapêutico;
+
+if (Acesso autorizado?) then (sim)
+  :Exibe histórico\nde evoluções anteriores\n(somente leitura de anteriores);
+  :Abre campo de\ntexto livre para\nnova evolução;
+
+  |Psicólogo|
+  :Redige evolução\nda sessão;
+
+  if (Deseja anexar arquivo?) then (sim)
+    :Seleciona arquivo\n(PDF/JPEG/PNG, máx 10MB);
+
+    |Sistema|
+    :Valida tipo\ne tamanho do arquivo;
+    :Armazena arquivo\nno storage criptografado\n(AES-256);
+  else (não)
+  endif
+
+  |Psicólogo|
+  :Clica em\n"Salvar Evolução";
+
+  |Sistema|
+  :Grava evolução com\ncarimarho de data/hora\n(não editável pelo usuário);
+  :Vincula ao paciente\ne à sessão;
+  :Registra no\nLog de Auditoria (RNF04);
+  :Inicia contagem\ndo prazo de trava\n(padrão: 24h);
+  :Exibe confirmação\nde gravação;
+  stop
+
+else (negado)
+  |Sistema|
+  :Nega acesso;
+  :Registra tentativa\nno Log de Auditoria\ncomo "acesso_negado" (RN1);
+  :Exibe mensagem\nde acesso não autorizado;
+  stop
+endif
+
+@enduml
