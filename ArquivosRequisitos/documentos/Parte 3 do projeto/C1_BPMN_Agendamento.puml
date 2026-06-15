@@ -1,0 +1,63 @@
+@startuml C1_BPMN_Agendamento
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Atividades (notação BPMN)
+' Processo de Negócio 1: Agendamento de Sessão
+' Inclui: agendamento pelo psicólogo e pelo paciente
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ActivityBackgroundColor #EBF5FB
+skinparam ActivityBorderColor #2E75B6
+skinparam ActivityDiamondBackgroundColor #FEF9E7
+skinparam ActivityDiamondBorderColor #E8A020
+skinparam ArrowColor #1F4E79
+skinparam PartitionBackgroundColor #F8F9FA
+skinparam PartitionBorderColor #AAAAAA
+
+|Psicólogo|
+start
+:Acessa módulo\nde Agenda;
+:Seleciona horário\ndisponível na grade;
+
+|Sistema|
+:Exibe formulário\nde agendamento;
+
+|Psicólogo|
+:Informa: paciente,\ntipo (presencial/teleconsulta)\ne duração;
+
+|Sistema|
+:Valida disponibilidade\ne ausência de conflito\n(RN2);
+
+if (Horário disponível?) then (sim)
+  :Registra sessão\nna agenda;
+  :Atualiza grade\nem tempo real;
+  :Aciona módulo de\nNotificações (UC05);
+
+  |Sistema de Notificações|
+  if (Envio bem-sucedido?) then (sim)
+    :Envia confirmação\nao Paciente\n(WhatsApp / e-mail);
+  else (falha)
+    :Registra falha\ne agenda nova tentativa\n(máx. 3 tentativas);
+  endif
+
+  |Psicólogo|
+  :Visualiza sessão\ndestacada na grade;
+  stop
+
+else (conflito)
+  |Sistema|
+  :Exibe alerta\nde conflito de horário;
+
+  |Psicólogo|
+  if (Psicólogo cancela?) then (sim)
+    :Descarta ação;
+    stop
+  else (escolhe novo horário)
+    :Seleciona outro\nhorário disponível;
+    note right: retorna ao passo\nde preenchimento
+  endif
+endif
+
+@enduml

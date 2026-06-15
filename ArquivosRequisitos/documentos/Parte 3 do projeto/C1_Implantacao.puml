@@ -1,0 +1,97 @@
+@startuml C1_Implantacao
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Implantação (C1)
+' Nível: contexto externo — com quem o sistema se relaciona
+' Referência: IEEE 42010 simplificado / Larman
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam NodeFontStyle bold
+skinparam NodeBackgroundColor #EBF5FB
+skinparam NodeBorderColor #2E75B6
+skinparam ArtifactBackgroundColor #FEF9E7
+skinparam ArtifactBorderColor #E8A020
+skinparam DatabaseBackgroundColor #E9F7EF
+skinparam DatabaseBorderColor #27AE60
+skinparam ActorBackgroundColor #F5EEF8
+skinparam ActorBorderColor #7D3C98
+skinparam ArrowColor #1F4E79
+skinparam ArrowFontSize 10
+skinparam ComponentBackgroundColor #FDEDEC
+skinparam ComponentBorderColor #C0392B
+
+' ── Atores humanos externos ──────────────────────────────
+actor "Psicólogo\n(Usuário Principal)" as PSI #F5EEF8
+actor "Paciente\n(Usuário Secundário)" as PAC #F5EEF8
+
+' ── Dispositivos cliente ─────────────────────────────────
+node "Desktop / Laptop\n«browser»" as DESK #EBF5FB {
+  artifact "Chrome / Firefox\nSafari / Edge" as BROWSER
+}
+
+node "Smartphone / Tablet\n«PWA / browser»" as MOBILE #EBF5FB {
+  artifact "PWA instalado\nou browser mobile" as PWA
+}
+
+' ── Servidor de aplicação (nuvem) ────────────────────────
+node "Servidor de Aplicação\n«Azure / AWS / GCP»\nDatacenter Brasil (LGPD Art.33)" as APP_SERVER #D5E8F0 {
+  artifact "PsicoManager\nWeb App (.NET / C#)" as WEBAPP
+  artifact "API REST\n(HTTPS / TLS 1.2+)" as API
+}
+
+' ── Banco de dados ───────────────────────────────────────
+node "Servidor de Banco de Dados\n«SQL Server / PostgreSQL»\nnuvem — mesmo datacenter" as DB_SERVER #E9F7EF {
+  database "BD Clínico\n(prontuários, sessões)" as DB_CLINIC
+  database "BD Auth\n(usuários, perfis)" as DB_AUTH
+}
+
+' ── Serviços externos ────────────────────────────────────
+node "WhatsApp Business API\n«Meta / terceiro»" as WA #FEF9E7
+node "Servidor SMTP\n«e-mail — terceiro»" as SMTP #FEF9E7
+node "Gateway de Pagamento\n«Pix EMV — BACEN»" as GATEWAY #FEF9E7
+node "Storage de Arquivos\n«S3 / Blob Storage»\ncriptografado AES-256" as STORAGE #FEF9E7
+
+' ── Conexões dos atores com dispositivos ─────────────────
+PSI --> DESK  : acessa via\nnavegador
+PSI --> MOBILE : acessa via\nPWA / browser
+PAC --> MOBILE : acessa portal\nde agendamento
+PAC --> DESK   : acessa portal\nde agendamento
+
+' ── Dispositivos → servidor ──────────────────────────────
+BROWSER --> API : HTTPS / TLS 1.2+\nREST JSON
+PWA     --> API : HTTPS / TLS 1.2+\nREST JSON
+
+' ── Servidor → banco ─────────────────────────────────────
+WEBAPP --> DB_CLINIC : TCP/IP\nSQL criptografado
+WEBAPP --> DB_AUTH   : TCP/IP\nSQL criptografado
+
+' ── Servidor → serviços externos ─────────────────────────
+WEBAPP --> WA      : REST / HTTPS\nWhatsApp Business API\n(lembretes automáticos)
+WEBAPP --> SMTP    : SMTP / TLS\n(confirmações por e-mail)
+WEBAPP --> GATEWAY : REST / HTTPS\nOAuth 2.0\n(Pix copia-e-cola)
+WEBAPP --> STORAGE : HTTPS\nAWS SDK / Azure SDK\n(anexos de prontuário)
+
+' ── Notas explicativas ───────────────────────────────────
+note right of APP_SERVER
+  SLA ≥ 99,5% (RNF06)
+  Datacenter Brasil — LGPD Art. 33
+  TLS 1.2+ obrigatório em todas
+  as conexões externas (RNF02)
+end note
+
+note right of DB_SERVER
+  Banco clínico separado do banco
+  de autenticação (restrição de projeto)
+  Criptografia AES-256 em repouso (RNF02)
+  Backup diário automático (RNF07)
+end note
+
+note bottom of GATEWAY
+  Padrão Pix EMV — BACEN
+  Timeout máx. 10 s (RNF19/RNF20)
+  Falha → registro local + baixa manual
+end note
+
+@enduml

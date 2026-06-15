@@ -1,0 +1,116 @@
+@startuml C1_DiagramaCasosDeUso
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Casos de Uso
+' 18 UCs conforme revisão de granularidade (v2)
+' Atores: Psicólogo, Paciente, Sistema (notificações)
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ActorBackgroundColor #F5EEF8
+skinparam ActorBorderColor #7D3C98
+skinparam UsecaseBackgroundColor #EBF5FB
+skinparam UsecaseBorderColor #2E75B6
+skinparam UsecaseFontSize 11
+skinparam ArrowColor #1F4E79
+
+left to right direction
+
+' ── Atores ──────────────────────────────────────────────
+actor "Psicólogo" as PSI #F5EEF8
+actor "Paciente"  as PAC #E9F7EF
+actor "Sistema\n(Notificações)" as SYS #FEF9E7
+actor "Gateway\nPagamento" as GW  #FDEDEC
+
+' ── Fronteira do sistema ────────────────────────────────
+rectangle "PsicoManager" {
+
+  ' ── MÓDULO AGENDA ──
+  package "Módulo Agenda" #EBF5FB {
+    usecase "UC01a\nAgendar Sessão\n(Psicólogo)" as UC01a
+    usecase "UC01b\nEditar / Reagendar\nSessão" as UC01b
+    usecase "UC01c\nCancelar Sessão" as UC01c
+    usecase "UC01d\nBloquear Horário\nna Agenda" as UC01d
+    usecase "UC07\nAgendar Sessão\n(Paciente)" as UC07
+  }
+
+  ' ── MÓDULO PRONTUÁRIO ──
+  package "Módulo Prontuário" #FEF9E7 {
+    usecase "UC02a\nRegistrar Evolução\nClínica" as UC02a
+    usecase "UC02b\nEmitir Documento\nClínico" as UC02b
+  }
+
+  ' ── MÓDULO TELECONSULTA ──
+  package "Módulo Teleconsulta" #E9F7EF {
+    usecase "UC03\nRealizar Teleconsulta\n(Psicólogo)" as UC03
+    usecase "UC10\nAcessar Teleconsulta\n(Paciente)" as UC10
+  }
+
+  ' ── MÓDULO FINANCEIRO ──
+  package "Módulo Financeiro" #FDEDEC {
+    usecase "UC04a\nLançar Cobrança\nde Sessão" as UC04a
+    usecase "UC04b\nRegistrar Recebimento\nde Pagamento" as UC04b
+    usecase "UC04c\nVisualizar Relatório\nFinanceiro Mensal" as UC04c
+    usecase "UC08\nVisualizar\nCobrança" as UC08
+  }
+
+  ' ── MÓDULO NOTIFICAÇÕES ──
+  package "Módulo Notificações" #F5EEF8 {
+    usecase "UC05\nEnviar Lembretes\nAutomáticos" as UC05
+  }
+
+  ' ── MÓDULO DOCUMENTOS ──
+  package "Módulo Documentos" #F0FFF0 {
+    usecase "UC06a\nEnviar Material /\nQuestionário ao Paciente" as UC06a
+    usecase "UC06b\nCriar / Editar\nModelo de Documento" as UC06b
+    usecase "UC11\nAcessar\nDocumentos" as UC11
+  }
+
+  ' ── MÓDULO PACIENTE ──
+  package "Módulo Paciente" #FFFDE7 {
+    usecase "UC09\nRegistrar Diário\nde Emoções" as UC09
+  }
+}
+
+' ── Associações Psicólogo ──────────────────────────────
+PSI --> UC01a
+PSI --> UC01b
+PSI --> UC01c
+PSI --> UC01d
+PSI --> UC02a
+PSI --> UC02b
+PSI --> UC03
+PSI --> UC04a
+PSI --> UC04b
+PSI --> UC04c
+PSI --> UC06a
+PSI --> UC06b
+
+' ── Associações Paciente ───────────────────────────────
+PAC --> UC07
+PAC --> UC08
+PAC --> UC09
+PAC --> UC10
+PAC --> UC11
+
+' ── Associações Sistema ────────────────────────────────
+SYS --> UC05
+
+' ── Associações Gateway ────────────────────────────────
+GW --> UC04a : <<gera Pix>>
+GW --> UC04b : <<confirma pagamento>>
+
+' ── Relacionamentos <<include>> / <<extend>> ───────────
+UC01a ..> UC05 : <<include>>
+UC01b ..> UC05 : <<include>>
+UC01c ..> UC05 : <<include>>
+UC07  ..> UC05 : <<include>>
+
+UC03  ..> UC10 : <<extend>>\n(paciente entra na sala)
+UC04a ..> UC08 : <<extend>>\n(cobrança fica visível)
+
+UC02b ..> UC06b : <<extend>>\n(usa modelo)
+UC06a ..> UC11  : <<extend>>\n(material disponível)
+
+@enduml

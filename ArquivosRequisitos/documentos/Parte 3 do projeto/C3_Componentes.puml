@@ -1,0 +1,135 @@
+@startuml C3_Componentes
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Componentes (C3)
+' Componentes por pacote e suas interfaces
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ComponentBackgroundColor #EBF5FB
+skinparam ComponentBorderColor #2E75B6
+skinparam InterfaceBackgroundColor #FEF9E7
+skinparam InterfaceBorderColor #E8A020
+skinparam ArrowColor #1F4E79
+skinparam ArrowFontSize 9
+skinparam PackageBackgroundColor #F8F9FA
+skinparam PackageBorderColor #CCCCCC
+
+' ── Componentes de interface ─────────────────────────────
+package "Frontend (PWA / Browser)" as FE #D5E8F0 {
+  component [Painel do Psicólogo\n(SPA)] as UI_PSI
+  component [Painel do Paciente\n(Portal)] as UI_PAC
+}
+
+' ── API Gateway ──────────────────────────────────────────
+package "API Gateway" as GW_PKG #EEF3FB {
+  component [API REST\n(ASP.NET Core)] as API_GW
+  interface "HTTPS / TLS 1.2+" as I_HTTPS
+  interface "JWT Auth / RBAC" as I_JWT
+}
+
+' ── Componentes de domínio ───────────────────────────────
+package "Componente: Agenda" as PKG_AG #EBF5FB {
+  component [AgendaService] as AG_SVC
+  interface "IAgendaService" as I_AG
+  component [ConflictoHorarioValidator] as AG_VAL
+}
+
+package "Componente: Prontuário" as PKG_PR #FEF9E7 {
+  component [ProntuarioService] as PR_SVC
+  interface "IProntuarioService" as I_PR
+  component [TravaEdicaoJob\n(background)] as PR_JOB
+  component [AuditLogger] as PR_LOG
+}
+
+package "Componente: Financeiro" as PKG_FI #E9F7EF {
+  component [FinanceiroService] as FI_SVC
+  interface "IFinanceiroService" as I_FI
+  component [RelatorioEngine] as FI_REL
+}
+
+package "Componente: Teleconsulta" as PKG_TC #FDEDEC {
+  component [TeleconsultaService] as TC_SVC
+  interface "ITeleconsultaService" as I_TC
+  component [SalaVirtualManager\n(E2EE)] as TC_SALA
+}
+
+package "Componente: Notificações" as PKG_NT #F5EEF8 {
+  component [NotificacaoService] as NT_SVC
+  interface "INotificacaoService" as I_NT
+  component [WhatsAppAdapter] as NT_WA
+  component [EmailAdapter] as NT_EMAIL
+  component [RetryScheduler] as NT_RETRY
+}
+
+package "Componente: Paciente" as PKG_PAC #FFFDE7 {
+  component [PacienteService] as PAC_SVC
+  interface "IPacienteService" as I_PAC
+  component [DiarioEmocoesService] as PAC_DI
+}
+
+' ── Componentes de infraestrutura ────────────────────────
+package "Infraestrutura" as PKG_INF #F0F0F0 {
+  component [BD Clínico\n(PostgreSQL/SQLServer)] as DB_CLIN
+  component [BD Auth\n(PostgreSQL/SQLServer)] as DB_AUTH
+  component [Storage\n(S3 / Blob — AES-256)] as STORE
+  component [Log de Auditoria\n(tabela imutável)] as LOG_DB
+}
+
+' ── Serviços externos ────────────────────────────────────
+package "Externos" as EXT #FFF3CD {
+  component [WhatsApp\nBusiness API] as EXT_WA
+  component [SMTP Server] as EXT_SMTP
+  component [Gateway Pix\n(BACEN EMV)] as EXT_PIX
+}
+
+' ── Dependências FE → API ────────────────────────────────
+UI_PSI --> I_HTTPS
+UI_PAC --> I_HTTPS
+I_HTTPS -- API_GW
+API_GW --> I_JWT
+
+' ── API → serviços ───────────────────────────────────────
+API_GW --> I_AG
+API_GW --> I_PR
+API_GW --> I_FI
+API_GW --> I_TC
+API_GW --> I_NT
+API_GW --> I_PAC
+
+I_AG  -- AG_SVC
+I_PR  -- PR_SVC
+I_FI  -- FI_SVC
+I_TC  -- TC_SVC
+I_NT  -- NT_SVC
+I_PAC -- PAC_SVC
+
+' ── Serviços internos ────────────────────────────────────
+AG_SVC  --> AG_VAL
+PR_SVC  --> PR_JOB
+PR_SVC  --> PR_LOG
+FI_SVC  --> FI_REL
+TC_SVC  --> TC_SALA
+NT_SVC  --> NT_WA
+NT_SVC  --> NT_EMAIL
+NT_SVC  --> NT_RETRY
+PAC_SVC --> PAC_DI
+
+' ── Serviços → infraestrutura ────────────────────────────
+AG_SVC  --> DB_CLIN
+PR_SVC  --> DB_CLIN
+PR_SVC  --> STORE
+PR_LOG  --> LOG_DB
+FI_SVC  --> DB_CLIN
+TC_SVC  --> DB_CLIN
+NT_SVC  --> DB_CLIN
+PAC_SVC --> DB_CLIN
+API_GW  --> DB_AUTH
+
+' ── Adaptadores → externos ───────────────────────────────
+NT_WA    --> EXT_WA
+NT_EMAIL --> EXT_SMTP
+FI_SVC   --> EXT_PIX
+
+@enduml

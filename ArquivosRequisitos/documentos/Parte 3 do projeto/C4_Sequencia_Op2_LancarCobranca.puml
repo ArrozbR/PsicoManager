@@ -1,0 +1,88 @@
+@startuml C4_Sequencia_Op2_LancarCobranca
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Sequência (C4) — Exemplo 2
+' Operação: FinanceiroService.lancarCobranca()
+' ─────────────────────────────────────────────────────────
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam SequenceArrowColor #1F4E79
+skinparam ParticipantBackgroundColor #E9F7EF
+skinparam ParticipantBorderColor #27AE60
+skinparam ActorBackgroundColor #F5EEF8
+skinparam ActorBorderColor #7D3C98
+skinparam SequenceGroupBackgroundColor #FFFDE7
+skinparam NoteBackgroundColor #FDEDEC
+
+actor "Psicólogo" as PSI
+
+participant "FinanceiroController\n[Web]" as CTRL
+participant "FinanceiroService\n[Aplicação]" as SVC
+participant "Cobranca\n[Entidade]" as COB_ENT
+participant "CobrancaRepository\n[Infra]" as COB_REPO
+participant "GatewayPagamento\nService\n[Infra]" as GW_SVC
+participant "AuditLogger\n[Infra]" as AUDIT
+participant "PacientePortal\nService\n[Aplicação]" as PORTAL
+database "BD Clínico" as DB
+participant "Gateway Pix\n[Externo — BACEN]" as EXT_PIX
+
+PSI -> CTRL : POST /financeiro/cobranças\n{sessaoId, valor}\n[JWT]
+
+CTRL -> SVC : lancarCobranca(psicologoId, sessaoId, valor)
+
+SVC -> COB_REPO : verificarSessaoRealizada(sessaoId)
+COB_REPO -> DB : SELECT FROM sessoes\nWHERE id=? AND status='realizada'\nAND psicologo_id=?
+DB --> COB_REPO : Sessao (realizada)
+COB_REPO --> SVC : ok
+
+SVC -> COB_REPO : verificarCobrancaExistente(sessaoId)
+COB_REPO -> DB : SELECT FROM cobrancas\nWHERE sessao_id=?
+DB --> COB_REPO : null (não existe)
+COB_REPO --> SVC : ok — pode lançar
+
+SVC -> COB_ENT : criar(\n  sessaoId, pacienteId,\n  psicologoId, valor,\n  status=PENDENTE,\n  formaPagamento=PIX)
+COB_ENT --> SVC : Cobranca (não persistida)
+
+SVC -> GW_SVC : gerarPixCopiaCola(\n  valor, descricao, cobrancaId,\n  validade=24h)
+
+GW_SVC -> EXT_PIX : POST /v2/cob\n{valor, calendario, devedor,\n infoAdicionais}\n[OAuth 2.0 — timeout 10s]
+
+alt Gateway disponível
+  EXT_PIX --> GW_SVC : HTTP 201\n{txid, pixCopiaECola, qrCode}
+  GW_SVC --> SVC : PixCopiaCola\n{codigo, validade}
+
+  SVC -> COB_ENT : adicionarPix(\n  codigo, validade)
+
+  SVC -> COB_REPO : salvar(cobranca)
+  COB_REPO -> DB : INSERT INTO cobrancas\n(id, sessao_id, paciente_id,\npsicologo_id, valor, status,\npix_codigo, pix_validade)
+  DB --> COB_REPO : cobrancaId
+
+  SVC -> PORTAL : disponibilizarParaPaciente(\n  pacienteId, cobrancaId)
+  note right of PORTAL
+    Torna a cobrança visível
+    no Painel do Paciente (UC08)
+    Acesso restrito ao paciente
+    vinculado (RN4)
+  end note
+
+  SVC -> AUDIT : registrar(\n  acao=CRIACAO, entidade=COBRANCA,\n  entidadeId=cobrancaId,\n  usuarioId=psicologoId)
+  AUDIT -> DB : INSERT INTO log_auditoria
+
+  SVC --> CTRL : CobrancaResponseDto\n{cobrancaId, pixCopiaECola, status=PENDENTE}
+  CTRL --> PSI : HTTP 201 Created\n{cobrancaId, pix, validade}
+
+else Gateway indisponível (timeout / erro)
+  EXT_PIX --> GW_SVC : timeout / HTTP 5xx
+  GW_SVC --> SVC : GatewayException
+
+  SVC -> COB_REPO : salvar(cobranca sem pix)
+  COB_REPO -> DB : INSERT INTO cobrancas\n(status=PENDENTE, pix_codigo=NULL)
+
+  SVC -> AUDIT : registrar(acao=CRIACAO, detalhes="gateway indisponível")
+
+  SVC --> CTRL : CobrancaResponseDto\n{cobrancaId, pix=null,\n aviso="Pix indisponível — lance manualmente"}
+  CTRL --> PSI : HTTP 201 Created\n(sem Pix automático)
+end
+
+@enduml
