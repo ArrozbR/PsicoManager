@@ -1,0 +1,22 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Ambiente
+appsettings.*.Local.json
+*.env
+storage/
+
+## SO
+.DS_Store
+Thumbs.db
