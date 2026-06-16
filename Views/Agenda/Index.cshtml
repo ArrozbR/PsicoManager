@@ -1,0 +1,49 @@
+@model AgendaVm
+@{
+    ViewData["Title"] = "Agenda";
+    string TagStatus(string s) => s switch
+    {
+        "Realizada" => "tag-green",
+        "Agendada" => "tag-blue",
+        "Falta" => "tag-red",
+        "Cancelada" => "tag-gray",
+        _ => "tag-gray"
+    };
+    string TagTipo(string t) => t == "Teleconsulta" ? "tag-blue" : "tag-gray";
+}
+
+<div class="panel">
+    <div class="panel-head">
+        Sessões (@Model.Sessoes.Count)
+        <span class="muted">histórico e agendamentos</span>
+    </div>
+    <div class="panel-body">
+        @if (Model.Sessoes.Count == 0)
+        {
+            <div class="empty">Nenhuma sessão cadastrada.</div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Paciente</th><th>Data/Hora</th><th>Duração</th>
+                        <th>Tipo</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Sessoes)
+                    {
+                        <tr>
+                            <td>@s.Paciente</td>
+                            <td>@s.DataHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@s.DuracaoMin min</td>
+                            <td><span class="tag @TagTipo(s.Tipo)">@s.Tipo</span></td>
+                            <td><span class="tag @TagStatus(s.Status)">@s.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

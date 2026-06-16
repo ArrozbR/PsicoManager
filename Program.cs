@@ -1,29 +1,39 @@
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+using PsicoManager.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Cultura pt-BR: moeda em R$ e datas dd/MM/yyyy.
+var culturaBr = new CultureInfo("pt-BR");
+CultureInfo.DefaultThreadCurrentCulture = culturaBr;
+CultureInfo.DefaultThreadCurrentUICulture = culturaBr;
+
 builder.Services.AddControllersWithViews();
+
+// Dados mockados em memória (singleton — sem banco real).
+builder.Services.AddSingleton<MockDataStore>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthorization();
-
-app.MapStaticAssets();
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(culturaBr),
+    SupportedCultures = new List<CultureInfo> { culturaBr },
+    SupportedUICultures = new List<CultureInfo> { culturaBr }
+};
+app.UseRequestLocalization(localizationOptions);
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

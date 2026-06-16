@@ -1,0 +1,63 @@
+@model FinanceiroVm
+@{
+    ViewData["Title"] = "Financeiro";
+    string TagStatus(string s) => s switch
+    {
+        "Pago" => "tag-green",
+        "Pendente" => "tag-amber",
+        "Inadimplente" => "tag-red",
+        _ => "tag-gray"
+    };
+}
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Total faturado</div>
+        <div class="kpi-value">@Model.TotalFaturado.ToString("C")</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Recebido</div>
+        <div class="kpi-value green">@Model.TotalRecebido.ToString("C")</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Em aberto</div>
+        <div class="kpi-value amber">@Model.EmAberto.ToString("C")</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Inadimplência</div>
+        <div class="kpi-value red">@Model.Inadimplencia.ToString("C")</div>
+        <div class="kpi-sub">@Model.PercInadimplencia.ToString("0.0")% do faturado</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">Cobranças (@Model.Cobrancas.Count)</div>
+    <div class="panel-body">
+        @if (Model.Cobrancas.Count == 0)
+        {
+            <div class="empty">Nenhuma cobrança lançada.</div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Paciente</th><th>Lançamento</th>
+                        <th class="right">Valor</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Cobrancas)
+                    {
+                        <tr>
+                            <td>@c.Paciente</td>
+                            <td>@c.DataLancamento.ToString("dd/MM/yyyy")</td>
+                            <td class="right">@c.Valor.ToString("C")</td>
+                            <td><span class="tag @TagStatus(c.Status)">@c.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

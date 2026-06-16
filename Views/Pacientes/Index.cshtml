@@ -1,0 +1,35 @@
+@model IReadOnlyList<PacienteLinhaVm>
+@{
+    ViewData["Title"] = "Pacientes";
+}
+
+<div class="panel">
+    <div class="panel-head">Pacientes (@Model.Count)</div>
+    <div class="panel-body">
+        <table>
+            <thead>
+                <tr><th>Nome</th><th>Telefone</th><th>WhatsApp</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>@p.Nome</td>
+                        <td>@(p.Telefone ?? "—")</td>
+                        <td>@(p.Whatsapp ?? "—")</td>
+                        <td>
+                            @if (p.Ativo)
+                            {
+                                <span class="tag tag-green">Ativo</span>
+                            }
+                            else
+                            {
+                                <span class="tag tag-gray">Inativo</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

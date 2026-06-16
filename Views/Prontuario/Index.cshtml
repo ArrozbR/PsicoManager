@@ -1,0 +1,37 @@
+@model ProntuarioListaVm
+@{
+    ViewData["Title"] = "Prontuários";
+}
+
+<div class="panel">
+    <div class="panel-head">Pacientes (@Model.Pacientes.Count)</div>
+    <div class="panel-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Paciente</th><th>Evoluções</th>
+                    <th>Última evolução</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Pacientes)
+                {
+                    <tr>
+                        <td>@p.Nome</td>
+                        <td>@p.QtdEvolucoes</td>
+                        <td>
+                            @(p.UltimaEvolucao.HasValue
+                                ? p.UltimaEvolucao.Value.ToLocalTime().ToString("dd/MM/yyyy")
+                                : "—")
+                        </td>
+                        <td class="right">
+                            <a class="link" asp-controller="Prontuario" asp-action="Detalhe" asp-route-id="@p.PacienteId">
+                                abrir prontuário →
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

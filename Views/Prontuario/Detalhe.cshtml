@@ -1,0 +1,38 @@
+@model ProntuarioDetalheVm
+@{
+    ViewData["Title"] = $"Prontuário · {Model.Paciente}";
+    string TagStatus(string s) => s == "Travada" ? "tag-gray" : "tag-green";
+}
+
+<a class="link back-link" asp-controller="Prontuario" asp-action="Index">← voltar aos prontuários</a>
+
+<div class="panel" style="margin-bottom:18px;">
+    <div class="panel-head">
+        @Model.Paciente
+        <span class="muted">@Model.Evolucoes.Count evolução(ões)</span>
+    </div>
+</div>
+
+@if (Model.Evolucoes.Count == 0)
+{
+    <div class="empty">Nenhuma evolução registrada para este paciente.</div>
+}
+else
+{
+    @foreach (var e in Model.Evolucoes)
+    {
+        <div class="evolucao-card">
+            <div class="ev-head">
+                <strong>@e.DataHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                <span class="tag @TagStatus(e.Status)">@e.Status</span>
+            </div>
+            <div class="ev-text">@e.Texto</div>
+            @if (e.Status != "Travada")
+            {
+                <div class="li-sub" style="margin-top:10px;">
+                    Editável até @e.TravarEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm") (RNF03)
+                </div>
+            }
+        </div>
+    }
+}
