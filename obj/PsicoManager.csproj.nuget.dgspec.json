@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Facul\\Projetos\\PsicoManager\\PsicoManager.csproj": {}
+    "C:\\codigos-test\\html do trabaio\\backend\\PsicoManager\\PsicoManager.csproj": {}
   },
   "projects": {
-    "E:\\Facul\\Projetos\\PsicoManager\\PsicoManager.csproj": {
+    "C:\\codigos-test\\html do trabaio\\backend\\PsicoManager\\PsicoManager.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Facul\\Projetos\\PsicoManager\\PsicoManager.csproj",
+        "projectUniqueName": "C:\\codigos-test\\html do trabaio\\backend\\PsicoManager\\PsicoManager.csproj",
         "projectName": "PsicoManager",
-        "projectPath": "E:\\Facul\\Projetos\\PsicoManager\\PsicoManager.csproj",
-        "packagesPath": "C:\\Users\\pedro\\.nuget\\packages\\",
-        "outputPath": "E:\\Facul\\Projetos\\PsicoManager\\obj\\",
+        "projectPath": "C:\\codigos-test\\html do trabaio\\backend\\PsicoManager\\PsicoManager.csproj",
+        "packagesPath": "C:\\Users\\Auvo2\\.nuget\\packages\\",
+        "outputPath": "C:\\codigos-test\\html do trabaio\\backend\\PsicoManager\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\pedro\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Auvo2\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -38,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -62,7 +68,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

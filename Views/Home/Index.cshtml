@@ -1,8 +1,86 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model DashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    string TagTipo(string t) => t == "Teleconsulta" ? "tag-blue" : "tag-gray";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Pacientes ativos</div>
+        <div class="kpi-value">@Model.TotalPacientes</div>
+        <div class="kpi-sub">em acompanhamento</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Sessões hoje</div>
+        <div class="kpi-value">@Model.SessoesHoje</div>
+        <div class="kpi-sub">@Model.SessoesAgendadas agendadas no total</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Faturado no mês</div>
+        <div class="kpi-value">@Model.FaturamentoMes.ToString("C")</div>
+        <div class="kpi-sub green">@Model.RecebidoMes.ToString("C") recebido</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Taxa de presença</div>
+        <div class="kpi-value green">@Model.TaxaPresenca.ToString("0.0")%</div>
+        <div class="kpi-sub">@Model.EmAberto.ToString("C") em aberto</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="panel">
+        <div class="panel-head">
+            Próximas sessões
+            <a class="link" asp-controller="Agenda" asp-action="Index">ver agenda</a>
+        </div>
+        <div class="panel-body">
+            @if (Model.ProximasSessoes.Count == 0)
+            {
+                <div class="empty">Nenhuma sessão agendada.</div>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr><th>Paciente</th><th>Data/Hora</th><th>Tipo</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.ProximasSessoes)
+                        {
+                            <tr>
+                                <td>@s.Paciente</td>
+                                <td>@s.DataHora.ToLocalTime().ToString("dd/MM HH:mm")</td>
+                                <td><span class="tag @TagTipo(s.Tipo)">@s.Tipo</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">Atividades recentes</div>
+        <div class="panel-body">
+            @if (Model.AtividadesRecentes.Count == 0)
+            {
+                <div class="empty">Sem atividades.</div>
+            }
+            else
+            {
+                <ul class="list">
+                    @foreach (var a in Model.AtividadesRecentes)
+                    {
+                        <li>
+                            <div>
+                                <div class="li-main">@a.Descricao</div>
+                                <div class="li-sub">@a.Quando.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                            <span class="tag tag-blue">@a.Tipo</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
 </div>

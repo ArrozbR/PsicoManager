@@ -1,1 +1,8 @@
 ArquivosRequisitos/documentos/Entrevista1Video.mp4
+
+# Visual Studio
+.vs/
+
+# Build outputs
+bin/
+obj/
