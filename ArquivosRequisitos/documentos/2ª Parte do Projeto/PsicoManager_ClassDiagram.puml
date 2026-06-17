@@ -1,0 +1,413 @@
+@startuml PsicoManager_ClassDiagram
+' ─────────────────────────────────────────────────────────
+' PsicoManager — Diagrama de Classes (Modelo de Dados)
+' Apenas atributos de dados; sem operações (métodos).
+' Baseado no Dicionário de Dados v1.0 — Maio/2026
+' ─────────────────────────────────────────────────────────
+
+skinparam classAttributeIconSize 0
+skinparam classFontName Arial
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #2E75B6
+skinparam classHeaderFontColor #FFFFFF
+skinparam classHeaderFontStyle bold
+skinparam classBorderColor #1F4E79
+skinparam classBackgroundColor #F5F8FF
+skinparam ArrowColor #1F4E79
+skinparam ArrowFontName Arial
+skinparam ArrowFontSize 10
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+' ══════════════════════════════════════════
+' ATORES / USUÁRIOS
+' ══════════════════════════════════════════
+
+class Psicologo {
+  + id          : UUID
+  + nome        : String
+  + crp         : String        ' formato: UF/XXXXXX
+  + email       : String        ' único no sistema
+  + telefone    : String
+  + especialidade : String
+  + senhaHash   : String
+  + mfaAtivo    : Boolean
+}
+
+class Paciente {
+  + id              : UUID
+  + nome            : String
+  + cpf             : String    ' 11 dígitos, validado Receita Federal
+  + dataNascimento  : Date      ' não pode ser futura
+  + email           : String
+  + telefone        : String
+  + whatsapp        : String
+}
+
+' ══════════════════════════════════════════
+' AGENDA
+' ══════════════════════════════════════════
+
+class HorarioAgenda {
+  + id          : UUID
+  + data        : Date
+  + horaInicio  : Time          ' múltipla de 15 min
+  + duracao     : Integer       ' minutos; 30–240
+  + tipo        : TipoHorario   ' disponível | ocupado | bloqueado
+  + recorrencia : TipoRecorrencia ' única | semanal | quinzenal | mensal
+  + dataTermino : Date          ' obrigatória se recorrência ≠ única
+}
+
+enum TipoHorario {
+  DISPONIVEL
+  OCUPADO
+  BLOQUEADO
+}
+
+enum TipoRecorrencia {
+  UNICA
+  SEMANAL
+  QUINZENAL
+  MENSAL
+}
+
+class BloqueioAgenda {
+  + id          : UUID
+  + dataInicio  : Date
+  + dataFim     : Date          ' dataInicio ≤ dataFim
+  + motivo      : String        ' máx. 100 chars
+  + tipo        : TipoBloqueio  ' pausa | almoço | férias | deslocamento | outro
+}
+
+enum TipoBloqueio {
+  PAUSA
+  ALMOCO
+  FERIAS
+  DESLOCAMENTO
+  OUTRO
+}
+
+class Sessao {
+  + id          : UUID
+  + tipo        : TipoSessao   ' presencial | teleconsulta
+  + duracao     : Integer      ' minutos
+  + status      : StatusSessao ' agendada | realizada | falta | cancelada
+  + dataHora    : DateTime     ' não pode ser passada no agendamento
+}
+
+enum TipoSessao {
+  PRESENCIAL
+  TELECONSULTA
+}
+
+enum StatusSessao {
+  AGENDADA
+  REALIZADA
+  FALTA
+  CANCELADA
+}
+
+' ══════════════════════════════════════════
+' TELECONSULTA
+' ══════════════════════════════════════════
+
+class Teleconsulta {
+  + id           : UUID
+  + linkAcesso   : String      ' URL única (UUID); gerado pelo sistema
+  + status       : StatusTele  ' aguardando | em_andamento | encerrada
+  + duracaoReal  : Integer     ' minutos; registrada ao encerrar
+  + criptografia : String      ' TLS + E2EE — fixo em sistema
+}
+
+enum StatusTele {
+  AGUARDANDO
+  EM_ANDAMENTO
+  ENCERRADA
+}
+
+' ══════════════════════════════════════════
+' PRONTUÁRIO CLÍNICO
+' ══════════════════════════════════════════
+
+class ProntuarioClinico {
+  + id              : UUID
+  + dataCriacao     : DateTime
+  + status          : StatusProntuario ' ativo | arquivado
+  + retencaoMinima  : Integer          ' anos; fixo = 5 (RN3)
+}
+
+enum StatusProntuario {
+  ATIVO
+  ARQUIVADO
+}
+
+class EvolutionClinica {
+  + id          : UUID
+  + texto       : Text         ' obrigatório; sem limite de caracteres
+  + dataHora    : DateTime     ' gerada pelo sistema; não editável
+  + status      : StatusEvolucao ' editável | travada
+  + prazoTrava  : Integer      ' horas; padrão 24h; configurável
+}
+
+enum StatusEvolucao {
+  EDITAVEL
+  TRAVADA
+}
+
+class Anexo {
+  + id          : UUID
+  + nome        : String       ' máx. 255 chars; sem / \ : * ? " < > |
+  + tipo        : TipoAnexo    ' PDF | JPEG | PNG
+  + tamanho     : Integer      ' bytes; máx. 10 MB
+  + dataUpload  : DateTime
+  + urlStorage  : String       ' URL criptografada no storage em nuvem
+}
+
+enum TipoAnexo {
+  PDF
+  JPEG
+  PNG
+}
+
+' ══════════════════════════════════════════
+' GESTÃO FINANCEIRA
+' ══════════════════════════════════════════
+
+class Cobranca {
+  + id              : UUID
+  + valor           : Decimal  ' BRL; > 0,00
+  + status          : StatusCobranca ' pendente | pago | inadimplente
+  + formaPagamento  : FormaPagamento ' Pix | outro
+  + dataLancamento  : Date
+  + dataPagamento   : Date     ' obrigatória quando status = pago
+}
+
+enum StatusCobranca {
+  PENDENTE
+  PAGO
+  INADIMPLENTE
+}
+
+enum FormaPagamento {
+  PIX
+  OUTRO
+}
+
+class PixCopiaECola {
+  + id          : UUID
+  + codigo      : String       ' formato EMV; máx. 512 chars
+  + validade    : DateTime     ' padrão: 24h após geração
+  + ativo       : Boolean
+}
+
+class RelatorioFinanceiro {
+  + id              : UUID
+  + periodo         : String   ' MM/YYYY
+  + totalFaturado   : Decimal  ' BRL
+  + totalRecebido   : Decimal
+  + totalInadimplente : Decimal
+  + previsaoReceita : Decimal
+  + dataGeracao     : DateTime ' snapshot; imutável após geração
+}
+
+class Recibo {
+  + id                 : UUID
+  + numero             : Integer   ' sequencial por Psicólogo; único
+  + valor              : Decimal   ' BRL; deve coincidir com Cobrança
+  + dataEmissao        : Date
+  + descricaoServico   : String    ' máx. 500 chars
+}
+
+' ══════════════════════════════════════════
+' NOTIFICAÇÕES
+' ══════════════════════════════════════════
+
+class Notificacao {
+  + id          : UUID
+  + tipo        : TipoNotificacao
+  + canal       : CanalNotificacao ' whatsapp | email | ambos
+  + status      : StatusNotificacao ' pendente | enviado | falha
+  + tentativas  : Integer          ' máx. 3
+  + dataEnvio   : DateTime
+}
+
+enum TipoNotificacao {
+  LEMBRETE_SESSAO
+  CONFIRMACAO_AGENDAMENTO
+  ALERTA_CANCELAMENTO
+  ALERTA_REAGENDAMENTO
+  ALERTA_PSICOLOGO
+}
+
+enum CanalNotificacao {
+  WHATSAPP
+  EMAIL
+  AMBOS
+}
+
+enum StatusNotificacao {
+  PENDENTE
+  ENVIADO
+  FALHA
+}
+
+class LembreteSessao {
+  + id            : UUID
+  + antecedencia  : Integer    ' horas; 1–72; padrão 24h
+  + tom           : TomLembrete ' formal | informal
+  + template      : String     ' template configurável pelo Psicólogo
+}
+
+enum TomLembrete {
+  FORMAL
+  INFORMAL
+}
+
+' ══════════════════════════════════════════
+' DOCUMENTOS E MATERIAIS
+' ══════════════════════════════════════════
+
+class Documento {
+  + id      : UUID
+  + tipo    : TipoDocumento
+  + formato : FormatoDocumento ' PDF_gerado | template_preenchido | arquivo_externo
+  + status  : StatusDocumento  ' rascunho | publicado | respondido
+}
+
+enum TipoDocumento {
+  RECIBO
+  ATESTADO
+  DECLARACAO
+  EXERCICIO
+  QUESTIONARIO
+  MATERIAL_LEITURA
+}
+
+enum FormatoDocumento {
+  PDF_GERADO
+  TEMPLATE_PREENCHIDO
+  ARQUIVO_EXTERNO
+}
+
+enum StatusDocumento {
+  RASCUNHO
+  PUBLICADO
+  RESPONDIDO
+}
+
+' ══════════════════════════════════════════
+' DIÁRIO DE EMOÇÕES
+' ══════════════════════════════════════════
+
+class DiarioEmocoes {
+  + id            : UUID
+  + compartilhado : Boolean    ' padrão: false; inacessível ao Psicólogo por default
+}
+
+class RegistroEmocao {
+  + id        : UUID
+  + dataHora  : DateTime       ' gerada pelo sistema
+  + humor     : Integer        ' 1–10
+  + texto     : Text           ' opcional; sem limite
+  + editavel  : Boolean        ' true até 24h após criação
+}
+
+' ══════════════════════════════════════════
+' SEGURANÇA E AUDITORIA
+' ══════════════════════════════════════════
+
+class LogAuditoria {
+  + id          : UUID
+  + usuarioId   : UUID         ' ref. Psicólogo ou Paciente
+  + acao        : TipoAcao
+  + entidade    : String       ' Prontuário | Evolução | Cobrança | Documento
+  + entidadeId  : UUID
+  + dataHora    : DateTime
+  + ipOrigem    : String       ' IPv4 ou IPv6; obrigatório mesmo em acesso negado
+}
+
+enum TipoAcao {
+  CRIACAO
+  LEITURA
+  EDICAO
+  EXCLUSAO
+  ACESSO_NEGADO
+}
+
+' ══════════════════════════════════════════
+' ATORES EXTERNOS (interfaces)
+' ══════════════════════════════════════════
+
+class GatewayPagamento <<external>> {
+  + protocolo     : String     ' REST / HTTPS
+  + formatoDados  : String     ' JSON
+  + autenticacao  : String     ' OAuth 2.0 / API Key
+  + timeoutSeg    : Integer    ' máx. 10 s
+}
+
+class APINotificacoes <<external>> {
+  + canais        : String     ' WhatsApp Business API + SMTP
+  + protocolo     : String     ' REST / HTTPS + SMTP
+  + timeoutSeg    : Integer    ' 5 s por tentativa; máx. 3 tentativas
+}
+
+' ══════════════════════════════════════════
+' ASSOCIAÇÕES
+' ══════════════════════════════════════════
+
+' Psicólogo — Paciente
+Psicologo "1" --o "0..*" Paciente : atende >
+
+' Psicólogo — Agenda
+Psicologo "1" --* "0..*" HorarioAgenda : possui >
+Psicologo "1" --* "0..*" BloqueioAgenda : bloqueia >
+
+' Sessão
+Psicologo "1" --* "0..*" Sessao : conduz >
+Paciente "1" --o "0..*" Sessao : participa >
+HorarioAgenda "1" --o "0..1" Sessao : reservado por >
+
+' Teleconsulta (especialização de Sessão)
+Sessao "1" --o "0..1" Teleconsulta : realizada como >
+
+' Prontuário
+Paciente "1" --* "1" ProntuarioClinico : possui >
+Psicologo "1" --o "0..*" ProntuarioClinico : responsável >
+
+ProntuarioClinico "1" --* "0..*" EvolutionClinica : composto por >
+Sessao "1" --o "0..1" EvolutionClinica : origina >
+EvolutionClinica "1" --o "0..*" Anexo : contém >
+
+' Financeiro
+Psicologo "1" --* "0..*" Cobranca : lança >
+Paciente "1" --o "0..*" Cobranca : deve >
+Sessao "1" --o "0..1" Cobranca : gera >
+Cobranca "1" --o "0..1" PixCopiaECola : gera >
+Cobranca "1" --o "0..1" Recibo : comprovada por >
+Psicologo "1" --o "0..*" RelatorioFinanceiro : consulta >
+
+' Notificações
+Sessao "1" --o "0..*" Notificacao : dispara >
+Notificacao "1" --o "0..1" LembreteSessao : especializada em >
+
+' Documentos
+Psicologo "1" --* "0..*" Documento : cria >
+Paciente "1" --o "0..*" Documento : recebe >
+Documento "1" --o "0..*" Anexo : contém >
+
+' Diário de Emoções
+Paciente "1" --* "1" DiarioEmocoes : possui >
+DiarioEmocoes "1" --* "0..*" RegistroEmocao : composto por >
+
+' Auditoria
+LogAuditoria ..> ProntuarioClinico : registra acesso a
+LogAuditoria ..> EvolutionClinica  : registra acesso a
+LogAuditoria ..> Cobranca          : registra acesso a
+LogAuditoria ..> Documento         : registra acesso a
+
+' Integrações externas
+GatewayPagamento ..> Cobranca       : processa pagamento de
+GatewayPagamento ..> PixCopiaECola : gera
+APINotificacoes  ..> Notificacao    : envia
+
+@enduml

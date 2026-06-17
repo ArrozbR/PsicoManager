@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Value Proposition Canvas — PsicoManager</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #E8A020;
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+  header p {
+    font-size: 13px;
+    color: #666;
+  }
+
+  /* Tab bar */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .tab {
+    padding: 10px 24px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    background: #fff;
+    color: #555;
+    transition: all 0.2s;
+  }
+  .tab:hover { border-color: #E8A020; color: #E8A020; }
+  .tab.active { background: #E8A020; border-color: #E8A020; color: #fff; }
+
+  /* Canvas wrapper */
+  .canvas-wrap { display: none; }
+  .canvas-wrap.active { display: block; }
+
+  /* The two-panel VPC layout */
+  .vpc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  /* ── Left panel: Value Map ── */
+  .value-map {
+    border-right: 2px solid #ccc;
+    display: grid;
+    grid-template-rows: 36px 1fr 1fr;
+  }
+  .panel-title {
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+  }
+  .vm-top { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #ccc; }
+  .vm-bottom { padding: 0; }
+
+  /* ── Right panel: Customer Profile ── */
+  .customer-profile {
+    display: grid;
+    grid-template-rows: 36px 1fr 1fr;
+  }
+  .cp-top { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #ccc; }
+  .cp-bottom { }
+
+  /* Segment blocks */
+  .seg {
+    padding: 14px 16px;
+    border-right: 1px solid #e0e0e0;
+    min-height: 170px;
+  }
+  .seg:last-child { border-right: none; }
+  .seg-title {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .seg-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Colors per segment */
+  .products  .seg-title { color: #2E75B6; }
+  .products  .dot       { background: #2E75B6; }
+  .pain-rel  .seg-title { color: #c0392b; }
+  .pain-rel  .dot       { background: #c0392b; }
+  .gain-cr   .seg-title { color: #27ae60; }
+  .gain-cr   .dot       { background: #27ae60; }
+
+  .jobs      .seg-title { color: #7d3c98; }
+  .jobs      .dot       { background: #7d3c98; }
+  .pains     .seg-title { color: #c0392b; }
+  .pains     .dot       { background: #c0392b; }
+  .gains     .seg-title { color: #27ae60; }
+  .gains     .dot       { background: #27ae60; }
+
+  .vm-bottom .seg { border-right: none; }
+
+  /* Card items */
+  .card {
+    display: inline-block;
+    font-size: 11.5px;
+    line-height: 1.4;
+    padding: 5px 9px;
+    border-radius: 5px;
+    margin: 3px 3px 3px 0;
+    vertical-align: top;
+  }
+  .products  .card { background: #EBF5FB; border: 1px solid #AED6F1; color: #1a5276; }
+  .pain-rel  .card { background: #FDEDEC; border: 1px solid #F5B7B1; color: #922b21; }
+  .gain-cr   .card { background: #E9F7EF; border: 1px solid #A9DFBF; color: #1e8449; }
+  .jobs      .card { background: #F5EEF8; border: 1px solid #D7BDE2; color: #6c3483; }
+  .pains     .card { background: #FDEDEC; border: 1px solid #F5B7B1; color: #922b21; }
+  .gains     .card { background: #E9F7EF; border: 1px solid #A9DFBF; color: #1e8449; }
+
+  /* Fit indicator */
+  .fit-bar {
+    background: #1a1a2e;
+    color: #E8A020;
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    grid-column: 1 / -1;
+  }
+  .fit-bar span { color: #fff; font-weight: 400; }
+
+  /* Bottom full-width section for Products & Services */
+  .bottom-full {
+    grid-column: 1 / -1;
+    border-top: 2px solid #ccc;
+    padding: 14px 16px;
+    background: #fafafa;
+  }
+  .bottom-full .seg-title { margin-bottom: 8px; }
+
+  /* Out-of-scope notice */
+  .removed {
+    font-size: 10.5px;
+    color: #999;
+    font-style: italic;
+    margin-top: 8px;
+    border-left: 3px solid #E8A020;
+    padding-left: 8px;
+  }
+
+  /* Actor tag */
+  .actor-tag {
+    display: inline-block;
+    background: #E8A020;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 11px;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">Value Proposition Canvas</div>
+  <h1>PsicoManager</h1>
+  <p>Modelo Strategyzer/Osterwalder · Corrigido conforme feedback do avaliador · Junho 2026</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('psicologo', this)">Psicólogo</div>
+  <div class="tab" onclick="show('paciente', this)">Paciente</div>
+  <div class="tab" onclick="show('secretaria', this)">Secretária</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- PSICÓLOGO                                           -->
+<!-- ════════════════════════════════════════════════════ -->
+<div class="canvas-wrap active" id="psicologo">
+<div class="vpc">
+
+  <!-- LEFT: Value Map -->
+  <div class="value-map">
+    <div class="panel-title">VALUE MAP — O que o PsicoManager entrega</div>
+
+    <div class="vm-top">
+      <div class="seg pain-rel">
+        <div class="seg-title"><span class="dot"></span>Pain Relievers</div>
+        <span class="card">Lembretes automáticos → reduz no-show</span>
+        <span class="card">Armazenamento criptografado (AES-256) → LGPD garantida</span>
+        <span class="card">Trava de edição no prontuário → segurança jurídica CFP</span>
+        <span class="card">Log de auditoria imutável → rastreabilidade ética</span>
+        <div class="removed">↑ Cada item alivia uma dor específica do lado direito</div>
+      </div>
+      <div class="seg gain-cr">
+        <div class="seg-title"><span class="dot"></span>Gain Creators</div>
+        <span class="card">Agenda semanal visual com visão consolidada</span>
+        <span class="card">Dashboard financeiro mensal automático</span>
+        <span class="card">Histórico clínico centralizado e indexado</span>
+        <span class="card">Conformidade CFP/LGPD embutida no fluxo</span>
+        <div class="removed">↑ Cada item cria um ganho do lado direito</div>
+      </div>
+    </div>
+
+    <div class="vm-bottom">
+      <div class="seg products">
+        <div class="seg-title"><span class="dot"></span>Products &amp; Services</div>
+        <span class="card">Agenda dinâmica com sessões recorrentes e bloqueios</span>
+        <span class="card">Prontuário eletrônico com trava pós-24h</span>
+        <span class="card">Envio de lembretes via WhatsApp/e-mail</span>
+        <span class="card">Gestão financeira: lançamento, baixa, relatório</span>
+        <span class="card">Portal de autoagendamento para o paciente</span>
+        <span class="card">Teleconsulta nativa E2EE (Res. CFP 11/2018)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Customer Profile -->
+  <div class="customer-profile">
+    <div class="panel-title">CUSTOMER PROFILE — Psicólogo autônomo</div>
+
+    <div class="cp-top">
+      <div class="seg pains">
+        <div class="seg-title"><span class="dot"></span>Pains</div>
+        <span class="card">Alto índice de no-show sem aviso prévio</span>
+        <span class="card">Risco de violação de sigilo (LGPD + CFP)</span>
+        <span class="card">Ferramentas fragmentadas (planilha, WhatsApp, caderno)</span>
+        <span class="card">Prontuário sem trava nem auditoria → risco ético</span>
+        <span class="card">Teleconsulta via Zoom → infração Res. CFP 11/2018</span>
+      </div>
+      <div class="seg gains">
+        <div class="seg-title"><span class="dot"></span>Gains</div>
+        <span class="card">Mais tempo dedicado ao atendimento clínico</span>
+        <span class="card">Visão integrada de agenda, prontuário e financeiro</span>
+        <span class="card">Conformidade CFP e LGPD garantida pelo sistema</span>
+        <span class="card">Maior retenção de pacientes com lembretes</span>
+      </div>
+    </div>
+
+    <div class="seg jobs" style="border-top:2px solid #ccc; min-height:170px; border-right:none;">
+      <div class="seg-title"><span class="dot"></span>Customer Jobs</div>
+      <span class="card">Gerenciar agenda e disponibilidade semanal</span>
+      <span class="card">Registrar e acessar prontuários com segurança</span>
+      <span class="card">Emitir cobranças e controlar pagamentos</span>
+      <span class="card">Captar e reter pacientes</span>
+      <span class="card">Manter conformidade legal (CFP + LGPD)</span>
+    </div>
+  </div>
+
+  <div class="fit-bar">✅ FIT — <span>Pain Relievers e Gain Creators mapeados diretamente para Pains e Gains do Psicólogo</span></div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- PACIENTE (corrigido)                                -->
+<!-- ════════════════════════════════════════════════════ -->
+<div class="canvas-wrap" id="paciente">
+<div class="vpc">
+
+  <div class="value-map">
+    <div class="panel-title">VALUE MAP — O que o PsicoManager entrega ao Paciente</div>
+
+    <div class="vm-top">
+      <div class="seg pain-rel">
+        <div class="seg-title"><span class="dot"></span>Pain Relievers</div>
+        <span class="card">Portal de autoagendamento 24h → sem depender de ligação</span>
+        <span class="card">Confirmação automática por e-mail/WhatsApp → sem dúvida sobre o horário</span>
+        <span class="card">Lembrete discreto (sem revelar 'psicólogo' na tela de bloqueio) → privacidade preservada</span>
+        <span class="card">Link único de teleconsulta → sem baixar app externo</span>
+        <div class="removed">↑ v1 incluía 'preços acessíveis/convênio' — removido: não é funcionalidade do sistema</div>
+      </div>
+      <div class="seg gain-cr">
+        <div class="seg-title"><span class="dot"></span>Gain Creators</div>
+        <span class="card">Portal com histórico de sessões agendadas e confirmadas</span>
+        <span class="card">Reagendamento autônomo sem precisar contatar o psicólogo</span>
+        <span class="card">Diário de Emoções privado para registros entre sessões</span>
+        <span class="card">Acesso a materiais e exercícios enviados pelo psicólogo</span>
+        <div class="removed">↑ v1 incluía 'psicólogos certificados CRP' — removido: atributo do profissional, não do sistema</div>
+      </div>
+    </div>
+
+    <div class="vm-bottom">
+      <div class="seg products">
+        <div class="seg-title"><span class="dot"></span>Products &amp; Services</div>
+        <span class="card">Portal de autoagendamento (UC07)</span>
+        <span class="card">Confirmações e lembretes automáticos (UC05)</span>
+        <span class="card">Acesso à teleconsulta via link único (UC10)</span>
+        <span class="card">Diário de Emoções criptografado (UC09)</span>
+        <span class="card">Central de documentos e materiais (UC11)</span>
+        <div class="removed">↑ v1 incluía 'sessão experimental gratuita' e 'pacotes com desconto' — estratégia de marketing, não funcionalidade do sistema</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="customer-profile">
+    <div class="panel-title">CUSTOMER PROFILE — Paciente em acompanhamento psicológico</div>
+
+    <div class="cp-top">
+      <div class="seg pains">
+        <div class="seg-title"><span class="dot"></span>Pains</div>
+        <span class="card">Dificuldade para agendar ou reagendar sem passar pelo psicólogo</span>
+        <span class="card">Risco de esquecer o horário da sessão</span>
+        <span class="card">Preocupação com privacidade: notificações visíveis na tela de bloqueio</span>
+        <span class="card">Dependência de plataformas externas para teleconsulta (Zoom, Meet)</span>
+        <div class="removed">↑ v1 incluía 'estigma social' e 'medo de não ter resultados' — pains da psicoterapia em geral, não do sistema</div>
+      </div>
+      <div class="seg gains">
+        <div class="seg-title"><span class="dot"></span>Gains</div>
+        <span class="card">Autonomia para agendar, cancelar e reagendar online</span>
+        <span class="card">Certeza de não esquecer a sessão com lembretes automáticos</span>
+        <span class="card">Privacidade nas comunicações do sistema</span>
+        <span class="card">Experiência fluida e centralizada (agendamento + teleconsulta + materiais)</span>
+        <div class="removed">↑ v1 incluía 'melhorar relações interpessoais' — gain da psicoterapia, não do sistema</div>
+      </div>
+    </div>
+
+    <div class="seg jobs" style="border-top:2px solid #ccc; min-height:170px; border-right:none;">
+      <div class="seg-title"><span class="dot"></span>Customer Jobs</div>
+      <span class="card">Agendar, cancelar e reagendar sessões sem depender de contato direto</span>
+      <span class="card">Receber confirmações e lembretes de sessão</span>
+      <span class="card">Acessar teleconsulta de forma simples</span>
+      <span class="card">Manter privacidade no uso do sistema</span>
+      <span class="card">Acompanhar materiais enviados pelo psicólogo</span>
+    </div>
+  </div>
+
+  <div class="fit-bar">✅ FIT — <span>Todos os Pain Relievers e Gain Creators conectados a Pains/Gains operacionais do sistema</span></div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- SECRETÁRIA                                          -->
+<!-- ════════════════════════════════════════════════════ -->
+<div class="canvas-wrap" id="secretaria">
+<div class="vpc">
+
+  <div class="value-map">
+    <div class="panel-title">VALUE MAP — O que o PsicoManager entrega à Secretária</div>
+
+    <div class="vm-top">
+      <div class="seg pain-rel">
+        <div class="seg-title"><span class="dot"></span>Pain Relievers</div>
+        <span class="card">Agenda centralizada → elimina uso de papel e WhatsApp para agendar</span>
+        <span class="card">Confirmações automáticas → elimina retrabalho de confirmação manual por telefone</span>
+        <span class="card">Histórico auditável de alterações → responsabilidade clara por mudanças</span>
+        <span class="card">Busca rápida por paciente → elimina dificuldade de acessar informações</span>
+      </div>
+      <div class="seg gain-cr">
+        <div class="seg-title"><span class="dot"></span>Gain Creators</div>
+        <span class="card">Visão diária da agenda com status de presença</span>
+        <span class="card">Relatório diário de caixa gerado automaticamente</span>
+        <span class="card">Registro de pagamentos integrado à agenda</span>
+        <span class="card">Interface simples para usuário sem formação técnica</span>
+      </div>
+    </div>
+
+    <div class="vm-bottom">
+      <div class="seg products">
+        <div class="seg-title"><span class="dot"></span>Products &amp; Services</div>
+        <span class="card">Módulo de agendamento centralizado (UC01a–UC01d)</span>
+        <span class="card">Confirmação automática via WhatsApp/e-mail (UC05)</span>
+        <span class="card">Registro de pagamentos com baixa manual (UC04b)</span>
+        <span class="card">Relatório diário de agenda e caixa (UC04c)</span>
+        <span class="card">Busca rápida de pacientes e histórico de alterações</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="customer-profile">
+    <div class="panel-title">CUSTOMER PROFILE — Secretária / Assistente administrativo</div>
+
+    <div class="cp-top">
+      <div class="seg pains">
+        <div class="seg-title"><span class="dot"></span>Pains</div>
+        <span class="card">Agenda descentralizada (papel, WhatsApp, ligações)</span>
+        <span class="card">Retrabalho por falhas de comunicação com pacientes</span>
+        <span class="card">Dificuldade de acessar informações de pacientes rapidamente</span>
+        <span class="card">Sem controle claro do fluxo de caixa do consultório</span>
+      </div>
+      <div class="seg gains">
+        <div class="seg-title"><span class="dot"></span>Gains</div>
+        <span class="card">Processo de agendamento centralizado e rastreável</span>
+        <span class="card">Menos erros e retrabalho operacional</span>
+        <span class="card">Acesso rápido a informações do paciente na mesma tela</span>
+        <span class="card">Controle financeiro claro e confiável no dia a dia</span>
+      </div>
+    </div>
+
+    <div class="seg jobs" style="border-top:2px solid #ccc; min-height:170px; border-right:none;">
+      <div class="seg-title"><span class="dot"></span>Customer Jobs</div>
+      <span class="card">Agendar, remarcar e cancelar consultas</span>
+      <span class="card">Confirmar presença de pacientes</span>
+      <span class="card">Registrar pagamentos e emitir recibos</span>
+      <span class="card">Responder dúvidas de primeiro contato</span>
+    </div>
+  </div>
+
+  <div class="fit-bar">✅ FIT — <span>Pain Relievers e Gain Creators endereçam diretamente cada dor e ganho operacional da Secretária</span></div>
+</div>
+</div>
+
+<footer>PsicoManager · Value Proposition Canvas v3.0 · Junho 2026 · Modelo Strategyzer/Osterwalder</footer>
+
+<script>
+function show(id, tab) {
+  document.querySelectorAll('.canvas-wrap').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  tab.classList.add('active');
+}
+</script>
+</body>
+</html>
